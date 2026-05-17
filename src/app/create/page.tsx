@@ -1,27 +1,20 @@
 import Link from "next/link";
-import { ArrowLeft, Sparkles } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { AppHeader } from "@/components/app-header";
 import { EventForm } from "@/components/create/event-form";
 
 export default function CreatePage() {
   return (
     <div className="flex min-h-full flex-1 flex-col">
-      {/* Navigation */}
-      <header className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-md">
-        <nav className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-          <Link href="/" className="flex items-center gap-2">
-            <Sparkles className="size-5 text-primary" />
-            <span className="text-xl font-bold">EventOS AI</span>
-          </Link>
-
-          <Link href="/">
-            <Button variant="ghost" size="sm">
-              <ArrowLeft className="mr-2 size-4" />
-              Back
-            </Button>
-          </Link>
-        </nav>
-      </header>
+      <AppHeader>
+        <Link href="/">
+          <Button variant="ghost" size="sm">
+            <ArrowLeft className="mr-2 size-4" />
+            Back
+          </Button>
+        </Link>
+      </AppHeader>
 
       {/* Main Content */}
       <main className="flex-1 px-6 py-8">

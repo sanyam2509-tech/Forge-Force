@@ -3,11 +3,11 @@
 import { useState, useEffect, useCallback, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AppHeader } from "@/components/app-header";
 
 import { DashboardHeader } from "@/components/dashboard/dashboard-header";
 import { OverviewTab } from "@/components/dashboard/overview-tab";
@@ -21,15 +21,7 @@ import type { EventInput, GeneratedWorkspace } from "@/lib/types";
 function DashboardSkeleton() {
   return (
     <div className="flex min-h-full flex-1 flex-col">
-      {/* Navigation */}
-      <header className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-md">
-        <nav className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-          <Link href="/" className="flex items-center gap-2">
-            <Sparkles className="size-5 text-primary" />
-            <span className="text-xl font-bold">EventOS AI</span>
-          </Link>
-        </nav>
-      </header>
+      <AppHeader />
 
       <main className="flex-1 px-6 py-8">
         <div className="mx-auto max-w-6xl">
@@ -110,7 +102,7 @@ function DashboardContent() {
 
   useEffect(() => {
     try {
-      const stored = sessionStorage.getItem("eventos-input");
+      const stored = localStorage.getItem("eventos-input");
       if (!stored) {
         router.push("/create");
         return;
@@ -143,21 +135,13 @@ function DashboardContent() {
 
   return (
     <div className="flex min-h-full flex-1 flex-col">
-      {/* Navigation */}
-      <header className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-md">
-        <nav className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-          <Link href="/" className="flex items-center gap-2">
-            <Sparkles className="size-5 text-primary" />
-            <span className="text-xl font-bold">EventOS AI</span>
-          </Link>
-
-          <Link href="/create">
-            <Button variant="ghost" size="sm">
-              New Event
-            </Button>
-          </Link>
-        </nav>
-      </header>
+      <AppHeader>
+        <Link href="/create">
+          <Button variant="ghost" size="sm">
+            New Event
+          </Button>
+        </Link>
+      </AppHeader>
 
       <main className="flex-1 px-6 py-8">
         <div className="mx-auto max-w-6xl">

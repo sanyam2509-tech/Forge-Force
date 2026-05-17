@@ -3,18 +3,23 @@
 import { useState, useCallback } from "react";
 
 export function useCopyToClipboard() {
-  const [copied, setCopied] = useState(false);
+  const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
-  const copy = useCallback(async (text: string) => {
+  const copy = useCallback(async (text: string, key?: string) => {
     try {
       await navigator.clipboard.writeText(text);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      setCopiedKey(key ?? "__default__");
+      setTimeout(() => setCopiedKey(null), 2000);
     } catch {
       // Fallback for environments where clipboard API is not available
-      setCopied(false);
+      setCopiedKey(null);
     }
   }, []);
 
-  return { copied, copy };
+  const isCopied = useCallback(
+    (key?: string) => copiedKey === (key ?? "__default__"),
+    [copiedKey]
+  );
+
+  return { isCopied, copy };
 }

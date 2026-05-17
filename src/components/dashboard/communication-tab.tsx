@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { MessageCircle, Camera, Bell, Mail, Copy, Check, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,6 +9,7 @@ import {
   CardAction,
   CardContent,
 } from "@/components/ui/card";
+import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
 import type { CommunicationItem } from "@/lib/types";
 
 interface CommunicationTabProps {
@@ -31,17 +31,7 @@ export function CommunicationTab({
   communication,
   onRegenerate,
 }: CommunicationTabProps) {
-  const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
-
-  const copyItem = async (content: string, index: number) => {
-    try {
-      await navigator.clipboard.writeText(content);
-      setCopiedIndex(index);
-      setTimeout(() => setCopiedIndex(null), 2000);
-    } catch {
-      // Clipboard API not available
-    }
-  };
+  const { isCopied, copy } = useCopyToClipboard();
 
   return (
     <Card>
@@ -52,20 +42,20 @@ export function CommunicationTab({
         <CardAction>
           <Button variant="ghost" size="sm" onClick={onRegenerate}>
             <RefreshCw className="size-3.5 mr-1" />
-            Regenerate
+            Regenerate All
           </Button>
         </CardAction>
       </CardHeader>
       <CardContent>
         <div className="grid gap-4 md:grid-cols-2">
-          {communication.map((item, index) => {
+          {communication.map((item) => {
             const config = typeConfig[item.type];
             if (!config) return null;
             const Icon = config.icon;
 
             return (
               <div
-                key={index}
+                key={item.type}
                 className="rounded-lg border border-border/50 bg-secondary/50 p-4"
               >
                 {/* Top row */}
@@ -77,9 +67,9 @@ export function CommunicationTab({
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => copyItem(item.content, index)}
+                    onClick={() => copy(item.content, item.type)}
                   >
-                    {copiedIndex === index ? (
+                    {isCopied(item.type) ? (
                       <Check className="size-3.5" />
                     ) : (
                       <Copy className="size-3.5" />

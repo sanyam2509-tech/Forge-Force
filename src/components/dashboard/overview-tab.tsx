@@ -18,7 +18,7 @@ interface OverviewTabProps {
 }
 
 export function OverviewTab({ brief, onRegenerate }: OverviewTabProps) {
-  const { copied, copy } = useCopyToClipboard();
+  const { isCopied, copy } = useCopyToClipboard();
 
   const formatBriefAsText = () => {
     const lines = [
@@ -50,7 +50,7 @@ export function OverviewTab({ brief, onRegenerate }: OverviewTabProps) {
               size="sm"
               onClick={() => copy(formatBriefAsText())}
             >
-              {copied ? (
+              {isCopied() ? (
                 <>
                   <Check className="size-3.5 mr-1" />
                   Copied!
@@ -64,7 +64,7 @@ export function OverviewTab({ brief, onRegenerate }: OverviewTabProps) {
             </Button>
             <Button variant="ghost" size="sm" onClick={onRegenerate}>
               <RefreshCw className="size-3.5 mr-1" />
-              Regenerate
+              Regenerate All
             </Button>
           </div>
         </CardAction>

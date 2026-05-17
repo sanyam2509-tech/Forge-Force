@@ -1,36 +1,89 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# EventOS AI
+
+Turn event ideas into execution-ready operational workspaces. AI-powered event planning for communities, clubs, hackathons, and teams.
+
+## What It Does
+
+Fill in your event details — title, type, audience, date, and goals — and EventOS AI generates a complete operational workspace with five tabs:
+
+- **Event Brief** — summary, objectives, audience profile, and execution goals
+- **Task Checklist** — prioritized, categorized tasks with progress tracking
+- **Timeline** — phased plan (before / during / after the event)
+- **Communication Kit** — ready-to-send templates for WhatsApp, Instagram, email, and reminders
+- **Social Media Ideas** — reel, story, teaser, and countdown content with captions
+
+## Tech Stack
+
+- [Next.js 16](https://nextjs.org/) (App Router) with React 19
+- [shadcn/ui](https://ui.shadcn.com/) (base-nova style) with [Base UI](https://base-ui.com/)
+- [Tailwind CSS v4](https://tailwindcss.com/)
+- [Framer Motion](https://www.framer.com/motion/)
+- [Google Gemini API](https://ai.google.dev/) for AI generation (optional — falls back to mock data)
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+- Node.js 18+
+- npm, yarn, pnpm, or bun
+
+### Installation
+
+```bash
+# Clone the repository
+git clone https://github.com/sanyam2509-tech/Forge-Force.git
+cd Forge-Force
+
+# Install dependencies
+npm install
+
+# (Optional) Set up AI generation
+cp .env.example .env.local
+# Add your Gemini API key to .env.local
+```
+
+### Development
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) to see the app.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Build
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run build
+npm start
+```
 
-## Learn More
+## Environment Variables
 
-To learn more about Next.js, take a look at the following resources:
+See [`.env.example`](.env.example) for all available environment variables.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+| Variable | Required | Description |
+| --- | --- | --- |
+| `GEMINI_API_KEY` | No | Google Gemini API key. When not set, the app uses mock data. |
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Project Structure
 
-## Deploy on Vercel
+```
+src/
+├── app/
+│   ├── api/generate/   # POST endpoint — Gemini AI or mock fallback
+│   ├── create/         # Event creation form
+│   ├── dashboard/      # Generated workspace viewer
+│   ├── layout.tsx      # Root layout
+│   └── page.tsx        # Landing page
+├── components/
+│   ├── create/         # Event form
+│   ├── dashboard/      # Dashboard tabs and header
+│   ├── landing/        # Landing page sections
+│   └── ui/             # shadcn/ui primitives
+├── hooks/              # Custom React hooks
+└── lib/                # Types, utilities, mock data
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## License
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+This project is private.

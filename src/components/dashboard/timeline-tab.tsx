@@ -27,7 +27,7 @@ const phaseConfig: Record<
 };
 
 export function TimelineTab({ timeline, onRegenerate }: TimelineTabProps) {
-  const { copied, copy } = useCopyToClipboard();
+  const { isCopied, copy } = useCopyToClipboard();
 
   const formatAllAsText = () => {
     return timeline
@@ -57,9 +57,9 @@ export function TimelineTab({ timeline, onRegenerate }: TimelineTabProps) {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => copy(formatAllAsText())}
+              onClick={() => copy(formatAllAsText(), "all")}
             >
-              {copied ? (
+              {isCopied("all") ? (
                 <>
                   <Check className="size-3.5 mr-1" />
                   Copied!
@@ -73,7 +73,7 @@ export function TimelineTab({ timeline, onRegenerate }: TimelineTabProps) {
             </Button>
             <Button variant="ghost" size="sm" onClick={onRegenerate}>
               <RefreshCw className="size-3.5 mr-1" />
-              Regenerate
+              Regenerate All
             </Button>
           </div>
         </CardAction>
@@ -96,10 +96,19 @@ export function TimelineTab({ timeline, onRegenerate }: TimelineTabProps) {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => copy(formatPhaseAsText(phase))}
+                    onClick={() => copy(formatPhaseAsText(phase), phase.phase)}
                   >
-                    <Copy className="size-3.5 mr-1" />
-                    Copy
+                    {isCopied(phase.phase) ? (
+                      <>
+                        <Check className="size-3.5 mr-1" />
+                        Copied!
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="size-3.5 mr-1" />
+                        Copy
+                      </>
+                    )}
                   </Button>
                 </div>
 

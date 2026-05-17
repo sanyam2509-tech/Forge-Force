@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type { EventInput } from "@/lib/types";
 import { generateMockWorkspace } from "@/lib/mock-data";
+import { validateWorkspace } from "@/lib/validate-workspace";
 
 export async function POST(request: Request) {
   try {
@@ -20,11 +21,20 @@ export async function POST(request: Request) {
       );
     }
 
-    const apiKey = process.env.OPENAI_API_KEY;
+    // Validate audience size is a positive number
+    const size = Number(input.audienceSize);
+    if (!Number.isFinite(size) || size < 1) {
+      return NextResponse.json(
+        { error: "Invalid audience size" },
+        { status: 400 }
+      );
+    }
+
+    const apiKey = process.env.GEMINI_API_KEY;
 
     if (apiKey) {
       try {
-        const systemPrompt = `You are an expert event operations planner. Generate a complete event operational workspace as JSON.
+        const prompt = `You are an expert event operations planner. Generate a complete event operational workspace as JSON.
 The response must be valid JSON matching this exact schema:
 {
   "brief": { "summary": "string", "objectives": ["string"], "audience": "string", "executionGoals": ["string"] },
@@ -40,9 +50,10 @@ Requirements:
 - timeline: 3 phases (before: 5 tasks, during: 4 tasks, after: 3 tasks)
 - communication: 4 items (one each of whatsapp, instagram, reminder, email)
 - socialMedia: 4 items (one each of reel, story, teaser, countdown)
-- All content should be specific, actionable, and tailored to the event details provided.`;
+- All content should be specific, actionable, and tailored to the event details provided.
+- Return ONLY the JSON object, no markdown formatting or code blocks.
 
-        const userPrompt = `Generate a complete operational workspace for this event:
+Generate a complete operational workspace for this event:
 - Event Title: ${input.title}
 - Event Type: ${input.eventType}
 - Audience: ${input.audienceType}
@@ -53,55 +64,57 @@ Requirements:
 - Additional Notes: ${input.additionalNotes || "None"}`;
 
         const response = await fetch(
-          "https://api.openai.com/v1/chat/completions",
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
           {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              Authorization: `Bearer ${apiKey}`,
             },
             body: JSON.stringify({
-              model: "gpt-4o-mini",
-              messages: [
-                { role: "system", content: systemPrompt },
-                { role: "user", content: userPrompt },
+              contents: [
+                {
+                  parts: [{ text: prompt }],
+                },
               ],
-              response_format: { type: "json_object" },
-              temperature: 0.7,
+              generationConfig: {
+                temperature: 0.7,
+                responseMimeType: "application/json",
+              },
             }),
           }
         );
 
         if (!response.ok) {
           console.error(
-            "OpenAI API error:",
+            "Gemini API error:",
             response.status,
             await response.text()
           );
-          // Fallback to mock data on API error
           const workspace = generateMockWorkspace(input);
           return NextResponse.json(workspace);
         }
 
         const data = await response.json();
-        const content = data.choices?.[0]?.message?.content;
+        const content =
+          data.candidates?.[0]?.content?.parts?.[0]?.text;
 
         if (!content) {
           const workspace = generateMockWorkspace(input);
           return NextResponse.json(workspace);
         }
 
-        const parsed = JSON.parse(content);
+        // Clean potential markdown code block wrapping
+        const cleanedContent = content
+          .replace(/^```json\s*/i, "")
+          .replace(/^```\s*/i, "")
+          .replace(/\s*```$/i, "")
+          .trim();
 
-        // Validate the response has all required sections
-        if (
-          !parsed.brief ||
-          !parsed.checklist ||
-          !parsed.timeline ||
-          !parsed.communication ||
-          !parsed.socialMedia
-        ) {
-          console.error("OpenAI response missing required sections");
+        const parsed = JSON.parse(cleanedContent);
+
+        // Validate the full response structure
+        if (!validateWorkspace(parsed)) {
+          console.error("Gemini response failed schema validation");
           const workspace = generateMockWorkspace(input);
           return NextResponse.json(workspace);
         }

@@ -29,7 +29,7 @@ const priorityStyles: Record<string, string> = {
 };
 
 export function TasksTab({ checklist, onToggle, onRegenerate }: TasksTabProps) {
-  const { copied, copy } = useCopyToClipboard();
+  const { isCopied, copy } = useCopyToClipboard();
 
   const completedCount = checklist.filter((item) => item.completed).length;
   const totalCount = checklist.length;
@@ -67,7 +67,7 @@ export function TasksTab({ checklist, onToggle, onRegenerate }: TasksTabProps) {
               size="sm"
               onClick={() => copy(formatChecklistAsText())}
             >
-              {copied ? (
+              {isCopied() ? (
                 <>
                   <Check className="size-3.5 mr-1" />
                   Copied!
@@ -81,7 +81,7 @@ export function TasksTab({ checklist, onToggle, onRegenerate }: TasksTabProps) {
             </Button>
             <Button variant="ghost" size="sm" onClick={onRegenerate}>
               <RefreshCw className="size-3.5 mr-1" />
-              Regenerate
+              Regenerate All
             </Button>
           </div>
         </CardAction>

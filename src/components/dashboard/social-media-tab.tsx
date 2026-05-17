@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { Copy, Check, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -11,6 +10,7 @@ import {
   CardAction,
   CardContent,
 } from "@/components/ui/card";
+import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
 import type { SocialMediaIdea } from "@/lib/types";
 
 interface SocialMediaTabProps {
@@ -29,17 +29,7 @@ export function SocialMediaTab({
   socialMedia,
   onRegenerate,
 }: SocialMediaTabProps) {
-  const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
-
-  const copyItem = async (text: string, index: number) => {
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopiedIndex(index);
-      setTimeout(() => setCopiedIndex(null), 2000);
-    } catch {
-      // Clipboard API not available
-    }
-  };
+  const { isCopied, copy } = useCopyToClipboard();
 
   const formatIdeaAsText = (idea: SocialMediaIdea) => {
     return `${idea.title}\n\n${idea.description}\n\nCaption:\n${idea.caption}`;
@@ -54,15 +44,15 @@ export function SocialMediaTab({
         <CardAction>
           <Button variant="ghost" size="sm" onClick={onRegenerate}>
             <RefreshCw className="size-3.5 mr-1" />
-            Regenerate
+            Regenerate All
           </Button>
         </CardAction>
       </CardHeader>
       <CardContent>
         <div className="grid gap-4 md:grid-cols-2">
-          {socialMedia.map((idea, index) => (
+          {socialMedia.map((idea) => (
             <div
-              key={index}
+              key={idea.type}
               className="rounded-lg border border-border/50 bg-secondary/50 p-4"
             >
               {/* Top: type badge + title + copy */}
@@ -80,9 +70,9 @@ export function SocialMediaTab({
                   variant="ghost"
                   size="sm"
                   className="shrink-0"
-                  onClick={() => copyItem(formatIdeaAsText(idea), index)}
+                  onClick={() => copy(formatIdeaAsText(idea), idea.type)}
                 >
-                  {copiedIndex === index ? (
+                  {isCopied(idea.type) ? (
                     <Check className="size-3.5" />
                   ) : (
                     <Copy className="size-3.5" />

@@ -34,21 +34,25 @@ export function EventForm() {
   const [tone, setTone] = useState("");
   const [additionalNotes, setAdditionalNotes] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const handleSelectChange =
-    (setter: React.Dispatch<React.SetStateAction<string>>) =>
-    (value: string | null) => {
-      setter(value ?? "");
-    };
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validate required fields
-    if (!title || !eventType || !audienceType || !audienceSize || !eventDate) {
+    // Validate required fields including custom selects
+    const errors: Record<string, string> = {};
+    if (!eventType) errors.eventType = "Please select an event type.";
+    if (!audienceType) errors.audienceType = "Please select an audience type.";
+    if (!title) errors.title = "Please enter an event title.";
+    if (!audienceSize) errors.audienceSize = "Please enter expected audience size.";
+    if (!eventDate) errors.eventDate = "Please select an event date.";
+
+    if (Object.keys(errors).length > 0) {
+      setValidationErrors(errors);
       return;
     }
 
+    setValidationErrors({});
     setIsSubmitting(true);
 
     const input: EventInput = {
@@ -62,8 +66,8 @@ export function EventForm() {
       additionalNotes,
     };
 
-    // Store the full input in sessionStorage for the dashboard to use
-    sessionStorage.setItem("eventos-input", JSON.stringify(input));
+    // Store the full input in localStorage so the dashboard survives refresh
+    localStorage.setItem("eventos-input", JSON.stringify(input));
 
     // Navigate to the dashboard
     router.push(
@@ -94,8 +98,18 @@ export function EventForm() {
             {/* Event Type */}
             <div className="space-y-2">
               <Label htmlFor="eventType">Event Type</Label>
-              <Select value={eventType} onValueChange={handleSelectChange(setEventType)}>
-                <SelectTrigger id="eventType">
+              <Select
+                value={eventType}
+                onValueChange={(v) => {
+                  setEventType(v ?? "");
+                  setValidationErrors((prev) => {
+                    const next = { ...prev };
+                    delete next.eventType;
+                    return next;
+                  });
+                }}
+              >
+                <SelectTrigger id="eventType" aria-invalid={!!validationErrors.eventType}>
                   <SelectValue placeholder="Select event type" />
                 </SelectTrigger>
                 <SelectContent>
@@ -109,13 +123,26 @@ export function EventForm() {
                   <SelectItem value="Competition">Competition</SelectItem>
                 </SelectContent>
               </Select>
+              {validationErrors.eventType && (
+                <p className="text-sm text-red-400">{validationErrors.eventType}</p>
+              )}
             </div>
 
             {/* Audience Type */}
             <div className="space-y-2">
               <Label htmlFor="audienceType">Audience Type</Label>
-              <Select value={audienceType} onValueChange={handleSelectChange(setAudienceType)}>
-                <SelectTrigger id="audienceType">
+              <Select
+                value={audienceType}
+                onValueChange={(v) => {
+                  setAudienceType(v ?? "");
+                  setValidationErrors((prev) => {
+                    const next = { ...prev };
+                    delete next.audienceType;
+                    return next;
+                  });
+                }}
+              >
+                <SelectTrigger id="audienceType" aria-invalid={!!validationErrors.audienceType}>
                   <SelectValue placeholder="Select audience type" />
                 </SelectTrigger>
                 <SelectContent>
@@ -127,6 +154,9 @@ export function EventForm() {
                   <SelectItem value="Mixed">Mixed</SelectItem>
                 </SelectContent>
               </Select>
+              {validationErrors.audienceType && (
+                <p className="text-sm text-red-400">{validationErrors.audienceType}</p>
+              )}
             </div>
 
             {/* Audience Size */}
@@ -135,6 +165,8 @@ export function EventForm() {
               <Input
                 id="audienceSize"
                 type="number"
+                min={1}
+                max={100000}
                 placeholder="e.g., 200"
                 value={audienceSize}
                 onChange={(e) => setAudienceSize(e.target.value)}
@@ -157,7 +189,7 @@ export function EventForm() {
             {/* Tone/Vibe */}
             <div className="space-y-2">
               <Label htmlFor="tone">Tone / Vibe</Label>
-              <Select value={tone} onValueChange={handleSelectChange(setTone)}>
+              <Select value={tone} onValueChange={(v) => setTone(v ?? "")}>
                 <SelectTrigger id="tone">
                   <SelectValue placeholder="Select tone" />
                 </SelectTrigger>
