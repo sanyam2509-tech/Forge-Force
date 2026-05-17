@@ -12,6 +12,17 @@ const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export async function POST(request: Request) {
   try {
+    // ── Authentication ───────────────────────────────────────────────────────
+    // Require an internal API secret so this endpoint cannot be used as an open
+    // email relay by arbitrary external callers.
+    const internalSecret = process.env.INTERNAL_API_SECRET;
+    if (internalSecret) {
+      const providedToken = request.headers.get("x-internal-token");
+      if (!providedToken || providedToken !== internalSecret) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      }
+    }
+
     const body: SendReminderRequest = await request.json();
 
     if (!body.to || !body.subject || !body.html) {

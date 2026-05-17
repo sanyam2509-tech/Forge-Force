@@ -165,16 +165,17 @@ export function RemindersTab({ eventInput, communication }: RemindersTabProps) {
     setSendingId(reminder.id);
     setSendingProgress(`0 / ${targetParticipants.length}`);
 
+    // On retry the caller has already stripped failed results from reminder,
+    // so we start from the counts that reflect what's actually in reminder.results.
     let sentCount = isRetry ? reminder.sentCount : 0;
     let demoCount = isRetry ? reminder.demoCount : 0;
-    let failedCount = isRetry
-      ? reminder.results.filter((r) => r.status === "failed").length
-      : 0;
+    let failedCount = isRetry ? reminder.failedCount : 0;
 
-    // Start with a copy of results (keep non-failed ones on retry, clear on fresh send)
-    let currentResults: EmailSendResult[] = isRetry
+    // Keep the non-failed results on retry; start fresh on a normal send.
+    const baseResults: EmailSendResult[] = isRetry
       ? reminder.results.filter((r) => r.status !== "failed")
       : [];
+    const newResults: EmailSendResult[] = [];
 
     for (let i = 0; i < targetParticipants.length; i++) {
       const p = targetParticipants[i];
@@ -186,7 +187,12 @@ export function RemindersTab({ eventInput, communication }: RemindersTabProps) {
       try {
         const response = await fetch("/api/send-reminder", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            ...(process.env.NEXT_PUBLIC_INTERNAL_API_SECRET
+              ? { "x-internal-token": process.env.NEXT_PUBLIC_INTERNAL_API_SECRET }
+              : {}),
+          },
           body: JSON.stringify({
             to: p.email,
             subject: reminder.subject,
@@ -206,27 +212,25 @@ export function RemindersTab({ eventInput, communication }: RemindersTabProps) {
           sentCount++;
           resStatus = "sent";
         } else {
-          if (isRetry) failedCount--;   // we're retrying a failed one
           failedCount++;
           resStatus = "failed";
           resError = res.error;
         }
       } catch (err) {
-        if (isRetry) failedCount--;
         failedCount++;
         resStatus = "failed";
         resError = err instanceof Error ? err.message : "Network error";
       }
 
-      const newResult: EmailSendResult = {
+      newResults.push({
         participantId: p.id,
         email: p.email,
         status: resStatus,
         error: resError,
-      };
-      currentResults = [...currentResults, newResult];
+      });
 
       // Live-update the reminder in state after each send
+      const currentResults = [...baseResults, ...newResults];
       setReminders((prev) =>
         prev
           ? prev.map((r) =>

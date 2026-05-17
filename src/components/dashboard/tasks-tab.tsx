@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   Copy,
   Check,
@@ -350,10 +350,11 @@ export function TasksTab({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
 
-  // Reset editingId whenever viewMode changes
-  useEffect(() => {
+  // Reset editingId when switching view mode
+  function handleSetViewMode(mode: "list" | "board") {
     setEditingId(null);
-  }, [viewMode]);
+    setViewMode(mode);
+  }
 
   const completedCount = checklist.filter((item) => item.completed).length;
   const totalCount = checklist.length;
@@ -418,7 +419,7 @@ export function TasksTab({
               variant="ghost"
               size="icon"
               className={`h-7 w-7 ${viewMode === "list" ? "bg-secondary text-primary" : "text-muted-foreground"}`}
-              onClick={() => setViewMode("list")}
+              onClick={() => handleSetViewMode("list")}
               title="List view"
             >
               <List className="size-4" />
@@ -427,7 +428,7 @@ export function TasksTab({
               variant="ghost"
               size="icon"
               className={`h-7 w-7 ${viewMode === "board" ? "bg-secondary text-primary" : "text-muted-foreground"}`}
-              onClick={() => setViewMode("board")}
+              onClick={() => handleSetViewMode("board")}
               title="Board view"
             >
               <LayoutGrid className="size-4" />

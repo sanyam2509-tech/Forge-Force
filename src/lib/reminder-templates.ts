@@ -13,7 +13,8 @@ function emailHtml(subject: string, body: string, eventTitle: string): string {
 </div>`;
 }
 
-export function generateReminderSchedule(eventInput: EventInput, emailBase: string): ReminderItem[] {
+export function generateReminderSchedule(eventInput: EventInput, emailBase?: string): ReminderItem[] {
+  void emailBase; // reserved for future template customisation
   const { title, eventDate } = eventInput;
   const safeTitle = escapeHtml(title);
   const safeDate = escapeHtml(eventDate);
