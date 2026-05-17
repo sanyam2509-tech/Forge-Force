@@ -33,6 +33,8 @@ export function generateMockWorkspace(input: EventInput): GeneratedWorkspace {
       task: "Finalize venue booking and confirm capacity, AV setup, Wi-Fi bandwidth, and parking availability",
       priority: "high",
       completed: false,
+      deadline: "6 weeks before event",
+      owner: "Logistics Team",
     },
     {
       id: "chk-2",
@@ -40,6 +42,8 @@ export function generateMockWorkspace(input: EventInput): GeneratedWorkspace {
       task: "Arrange catering with dietary options (vegetarian, vegan, gluten-free) and confirm delivery schedule",
       priority: "medium",
       completed: false,
+      deadline: "4 weeks before event",
+      owner: "Registration Lead",
     },
     {
       id: "chk-3",
@@ -47,6 +51,8 @@ export function generateMockWorkspace(input: EventInput): GeneratedWorkspace {
       task: "Set up online registration portal with ticketing tiers, confirmation emails, and QR code check-in",
       priority: "high",
       completed: false,
+      deadline: "3 weeks before event",
+      owner: "Program Team",
     },
     {
       id: "chk-4",
@@ -54,6 +60,8 @@ export function generateMockWorkspace(input: EventInput): GeneratedWorkspace {
       task: "Prepare attendee welcome kits including badges, event schedule, swag, and feedback QR cards",
       priority: "medium",
       completed: false,
+      deadline: "2 weeks before event",
+      owner: "Operations Lead",
     },
     {
       id: "chk-5",
@@ -61,6 +69,8 @@ export function generateMockWorkspace(input: EventInput): GeneratedWorkspace {
       task: "Launch social media campaign across Instagram, LinkedIn, and Twitter with event countdown graphics",
       priority: "high",
       completed: false,
+      deadline: "1 week before event",
+      owner: "Tech Lead",
     },
     {
       id: "chk-6",
@@ -68,6 +78,8 @@ export function generateMockWorkspace(input: EventInput): GeneratedWorkspace {
       task: "Send email invitations to mailing list and partner organizations with early-bird incentives",
       priority: "medium",
       completed: false,
+      deadline: "1 week before event",
+      owner: "Volunteer Coordinator",
     },
     {
       id: "chk-7",
@@ -75,6 +87,8 @@ export function generateMockWorkspace(input: EventInput): GeneratedWorkspace {
       task: "Confirm all speakers/panelists, collect bios, headshots, and presentation decks by deadline",
       priority: "high",
       completed: false,
+      deadline: "3 days before event",
+      owner: "Event Manager",
     },
     {
       id: "chk-8",
@@ -82,6 +96,8 @@ export function generateMockWorkspace(input: EventInput): GeneratedWorkspace {
       task: "Prepare session run-of-show document with timings, transitions, and backup plans for each segment",
       priority: "medium",
       completed: false,
+      deadline: "1 day before event",
+      owner: "Logistics Team",
     },
     {
       id: "chk-9",
@@ -89,6 +105,8 @@ export function generateMockWorkspace(input: EventInput): GeneratedWorkspace {
       task: "Hire photographer and videographer, brief them on key moments to capture and brand guidelines",
       priority: "low",
       completed: false,
+      deadline: "1 week before event",
+      owner: "Media Team",
     },
     {
       id: "chk-10",
@@ -96,6 +114,8 @@ export function generateMockWorkspace(input: EventInput): GeneratedWorkspace {
       task: "Set up on-site help desk, volunteer assignments, and emergency contact protocols",
       priority: "high",
       completed: false,
+      deadline: "1 day after event",
+      owner: "Event Manager",
     },
   ];
 

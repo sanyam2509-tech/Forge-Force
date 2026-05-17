@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef, Suspense } from "react";
+import { useState, useEffect, useCallback, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Users, Bell } from "lucide-react";
 import { AppHeader } from "@/components/app-header";
 
 import { DashboardHeader } from "@/components/dashboard/dashboard-header";
@@ -15,8 +16,10 @@ import { TasksTab } from "@/components/dashboard/tasks-tab";
 import { TimelineTab } from "@/components/dashboard/timeline-tab";
 import { CommunicationTab } from "@/components/dashboard/communication-tab";
 import { SocialMediaTab } from "@/components/dashboard/social-media-tab";
+import { VolunteersTab } from "@/components/dashboard/volunteers-tab";
+import { RemindersTab } from "@/components/dashboard/reminders-tab";
 
-import type { EventInput, GeneratedWorkspace } from "@/lib/types";
+import type { EventInput, GeneratedWorkspace, ChecklistItem } from "@/lib/types";
 
 function DashboardSkeleton() {
   return (
@@ -65,7 +68,20 @@ function DashboardContent() {
   const [workspace, setWorkspace] = useState<GeneratedWorkspace | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const eventInputRef = useRef<EventInput | null>(null);
+  // Incrementing this counter triggers a workspace re-fetch (used by Regenerate All).
+  const [fetchCount, setFetchCount] = useState(0);
+
+  // Read the stored event input once at mount time using a lazy initializer so
+  // it is available synchronously without reading a ref during render.
+  const [eventInput] = useState<EventInput | null>(() => {
+    try {
+      const stored = localStorage.getItem("eventos-input");
+      if (!stored) return null;
+      return JSON.parse(stored) as EventInput;
+    } catch {
+      return null;
+    }
+  });
 
   const title = searchParams.get("title") ?? "Untitled Event";
   const eventType = searchParams.get("type") ?? "Event";
@@ -101,26 +117,23 @@ function DashboardContent() {
   );
 
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem("eventos-input");
-      if (!stored) {
-        router.push("/create");
-        return;
-      }
-      const parsed: EventInput = JSON.parse(stored);
-      eventInputRef.current = parsed;
-      // Standard data-fetching-on-mount pattern
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      fetchWorkspace(parsed);
-    } catch {
+    if (!eventInput) {
       router.push("/create");
     }
-  }, [router, fetchWorkspace]);
+  }, [router, eventInput]);
+
+  useEffect(() => {
+    if (!eventInput) return;
+    // fetchWorkspace is an async data-fetch that updates state in its callbacks;
+    // calling it here is the standard on-mount data-fetching pattern.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void fetchWorkspace(eventInput);
+  // fetchCount in deps re-runs this effect when Regenerate All is clicked.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fetchCount]);
 
   const handleRegenerateAll = () => {
-    if (eventInputRef.current) {
-      fetchWorkspace(eventInputRef.current);
-    }
+    setFetchCount((n) => n + 1);
   };
 
   const handleToggleTask = (id: string) => {
@@ -131,6 +144,33 @@ function DashboardContent() {
         item.id === id ? { ...item, completed: !item.completed } : item
       ),
     });
+  };
+
+  const handleUpdateTask = (id: string, updates: Partial<ChecklistItem>) => {
+    setWorkspace((prev) =>
+      prev
+        ? {
+            ...prev,
+            checklist: prev.checklist.map((item) =>
+              item.id === id ? { ...item, ...updates } : item
+            ),
+          }
+        : null
+    );
+  };
+
+  const handleAddTask = (task: Omit<ChecklistItem, "id">) => {
+    setWorkspace((prev) =>
+      prev
+        ? {
+            ...prev,
+            checklist: [
+              ...prev.checklist,
+              { id: `custom-${Date.now()}`, ...task },
+            ],
+          }
+        : null
+    );
   };
 
   return (
@@ -185,7 +225,7 @@ function DashboardContent() {
           )}
 
           {/* Success state */}
-          {!loading && !error && workspace && (
+          {!loading && !error && workspace && eventInput && (
             <Tabs defaultValue="overview">
               <TabsList className="bg-secondary/50 rounded-lg mb-6 w-full overflow-x-auto sm:w-auto">
                 <TabsTrigger value="overview">Overview</TabsTrigger>
@@ -193,6 +233,12 @@ function DashboardContent() {
                 <TabsTrigger value="timeline">Timeline</TabsTrigger>
                 <TabsTrigger value="communication">Communication</TabsTrigger>
                 <TabsTrigger value="social-media">Social Media</TabsTrigger>
+                <TabsTrigger value="volunteers" className="flex items-center gap-1.5">
+                  <Users className="size-3.5" /> Volunteers
+                </TabsTrigger>
+                <TabsTrigger value="reminders" className="flex items-center gap-1.5">
+                  <Bell className="size-3.5" /> Reminders
+                </TabsTrigger>
               </TabsList>
 
               <TabsContent value="overview">
@@ -206,6 +252,8 @@ function DashboardContent() {
                 <TasksTab
                   checklist={workspace.checklist}
                   onToggle={handleToggleTask}
+                  onUpdate={handleUpdateTask}
+                  onAdd={handleAddTask}
                   onRegenerate={handleRegenerateAll}
                 />
               </TabsContent>
@@ -220,6 +268,7 @@ function DashboardContent() {
               <TabsContent value="communication">
                 <CommunicationTab
                   communication={workspace.communication}
+                  eventInput={eventInput}
                   onRegenerate={handleRegenerateAll}
                 />
               </TabsContent>
@@ -229,6 +278,14 @@ function DashboardContent() {
                   socialMedia={workspace.socialMedia}
                   onRegenerate={handleRegenerateAll}
                 />
+              </TabsContent>
+
+              <TabsContent value="volunteers">
+                <VolunteersTab eventInput={eventInput} />
+              </TabsContent>
+
+              <TabsContent value="reminders">
+                <RemindersTab eventInput={eventInput} communication={workspace.communication} />
               </TabsContent>
             </Tabs>
           )}

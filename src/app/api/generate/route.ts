@@ -38,7 +38,7 @@ export async function POST(request: Request) {
 The response must be valid JSON matching this exact schema:
 {
   "brief": { "summary": "string", "objectives": ["string"], "audience": "string", "executionGoals": ["string"] },
-  "checklist": [{ "id": "string", "category": "string", "task": "string", "priority": "high|medium|low", "completed": false }],
+  "checklist": [{ "id": "string", "category": "string", "task": "string", "priority": "high|medium|low", "completed": false, "deadline": "string (e.g. '4 weeks before event')", "owner": "string (e.g. 'Event Manager')" }],
   "timeline": [{ "phase": "before|during|after", "tasks": [{ "task": "string", "timing": "string" }] }],
   "communication": [{ "type": "whatsapp|instagram|reminder|email", "label": "string", "content": "string" }],
   "socialMedia": [{ "type": "reel|story|teaser|countdown", "title": "string", "description": "string", "caption": "string" }]
@@ -47,6 +47,7 @@ The response must be valid JSON matching this exact schema:
 Requirements:
 - brief: 3 objectives, 3 execution goals
 - checklist: 10 items across categories (Venue & Logistics, Registration, Promotion, Speakers & Content, Photography & Media, Attendee Management), with ids like "chk-1" through "chk-10"
+- checklist: each item must include deadline and owner fields
 - timeline: 3 phases (before: 5 tasks, during: 4 tasks, after: 3 tasks)
 - communication: 4 items (one each of whatsapp, instagram, reminder, email)
 - socialMedia: 4 items (one each of reel, story, teaser, countdown)
