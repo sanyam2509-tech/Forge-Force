@@ -39,7 +39,7 @@ export function SocialMediaTab({
     <Card>
       <CardHeader>
         <CardTitle className="text-lg font-semibold">
-          Social Media Ideas
+          Marketing Intelligence
         </CardTitle>
         <CardAction>
           <Button variant="ghost" size="sm" onClick={onRegenerate}>
@@ -53,7 +53,7 @@ export function SocialMediaTab({
           {socialMedia.map((idea) => (
             <div
               key={idea.type}
-              className="rounded-lg border border-border/50 bg-secondary/50 p-4"
+              className="rounded-lg border border-border/50 bg-secondary/35 p-4 transition-colors hover:border-primary/30"
             >
               {/* Top: type badge + title + copy */}
               <div className="flex items-start justify-between gap-2">
@@ -81,12 +81,12 @@ export function SocialMediaTab({
               </div>
 
               {/* Description */}
-              <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
+              <p className="mt-3 text-sm text-muted-foreground leading-relaxed">
                 {idea.description}
               </p>
 
               {/* Caption quote block */}
-              <div className="mt-3 border-l-2 border-primary/50 pl-3 text-sm italic leading-relaxed whitespace-pre-wrap">
+              <div className="mt-3 rounded-lg border border-primary/20 bg-primary/5 p-3 text-sm leading-relaxed whitespace-pre-wrap">
                 {idea.caption}
               </div>
             </div>

@@ -10,10 +10,11 @@ import {
   CardContent,
 } from "@/components/ui/card";
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
-import type { TimelinePhase } from "@/lib/types";
+import type { EventInput, TimelinePhase } from "@/lib/types";
 
 interface TimelineTabProps {
   timeline: TimelinePhase[];
+  eventInput: EventInput;
   onRegenerate: () => void;
 }
 
@@ -26,7 +27,43 @@ const phaseConfig: Record<
   after: { label: "After Event", icon: CheckCircle },
 };
 
-export function TimelineTab({ timeline, onRegenerate }: TimelineTabProps) {
+function formatAbsoluteDate(value: string) {
+  const date = new Date(`${value}T12:00:00`);
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+  });
+}
+
+function deriveTimelineDate(timing: string, eventDate: string) {
+  const event = new Date(`${eventDate}T12:00:00`);
+  if (Number.isNaN(event.getTime())) return "";
+  const lower = timing.toLowerCase();
+  const weekMatch = lower.match(/(\d+)\s*weeks?\s*before/);
+  const dayMatch = lower.match(/(\d+)\s*days?\s*before/);
+  const hourMatch = lower.match(/(\d+)\s*hours?\s*before/);
+
+  if (weekMatch) event.setDate(event.getDate() - Number(weekMatch[1]) * 7);
+  else if (dayMatch) event.setDate(event.getDate() - Number(dayMatch[1]));
+  else if (hourMatch) event.setDate(event.getDate() - 1);
+  else if (lower.includes("day before")) event.setDate(event.getDate() - 1);
+  else if (lower.includes("within 48 hours")) event.setDate(event.getDate() + 2);
+  else if (lower.includes("within 1 week")) event.setDate(event.getDate() + 7);
+  else if (lower.includes("same day") || lower.includes("event morning") || lower.includes("doors open") || lower.includes("closing")) {
+    // keep event date
+  } else if (lower.includes("today") || lower.includes("now") || lower.includes("next")) {
+    const today = new Date();
+    today.setHours(12, 0, 0, 0);
+    return formatAbsoluteDate(today.toISOString().slice(0, 10));
+  } else {
+    return "";
+  }
+
+  return formatAbsoluteDate(event.toISOString().slice(0, 10));
+}
+
+export function TimelineTab({ timeline, eventInput, onRegenerate }: TimelineTabProps) {
   const { isCopied, copy } = useCopyToClipboard();
 
   const formatAllAsText = () => {
@@ -35,7 +72,10 @@ export function TimelineTab({ timeline, onRegenerate }: TimelineTabProps) {
         const config = phaseConfig[phase.phase];
         const header = config?.label ?? phase.phase;
         const tasks = phase.tasks
-          .map((t) => `  [${t.timing}] ${t.task}`)
+          .map((t) => {
+            const date = deriveTimelineDate(t.timing, eventInput.eventDate);
+            return `  [${date ? `${date} · ` : ""}${t.timing}] ${t.task}`;
+          })
           .join("\n");
         return `${header}\n${tasks}`;
       })
@@ -45,7 +85,10 @@ export function TimelineTab({ timeline, onRegenerate }: TimelineTabProps) {
   const formatPhaseAsText = (phase: TimelinePhase) => {
     const config = phaseConfig[phase.phase];
     const header = config?.label ?? phase.phase;
-    return `${header}\n${phase.tasks.map((t) => `  [${t.timing}] ${t.task}`).join("\n")}`;
+    return `${header}\n${phase.tasks.map((t) => {
+      const date = deriveTimelineDate(t.timing, eventInput.eventDate);
+      return `  [${date ? `${date} · ` : ""}${t.timing}] ${t.task}`;
+    }).join("\n")}`;
   };
 
   return (
@@ -128,7 +171,9 @@ export function TimelineTab({ timeline, onRegenerate }: TimelineTabProps) {
                         {/* Content */}
                         <div>
                           <p className="text-sm font-medium text-primary">
-                            {task.timing}
+                            {deriveTimelineDate(task.timing, eventInput.eventDate)
+                              ? `${deriveTimelineDate(task.timing, eventInput.eventDate)} · ${task.timing}`
+                              : task.timing}
                           </p>
                           <p className="text-sm text-foreground mt-0.5 leading-relaxed">
                             {task.task}

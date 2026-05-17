@@ -20,10 +20,11 @@ export default function CreatePage() {
       <main className="flex-1 px-6 py-8">
         <div className="mx-auto max-w-3xl space-y-6">
           <div className="space-y-2">
-            <h1 className="text-3xl font-bold">Create Your Event Workspace</h1>
+            <h1 className="text-3xl font-bold">Brief the EventOS Agent</h1>
             <p className="text-muted-foreground">
-              Fill in the details and let AI generate your complete operational
-              plan.
+              Share the event shape once. EventOS will generate an operational
+              command center, realistic timeline, comms kit, social strategy,
+              and volunteer plan.
             </p>
           </div>
 

@@ -2,28 +2,30 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Gauge, Radio, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export function HeroSection() {
   return (
-    <section className="relative overflow-hidden py-24 md:py-32">
-      {/* Radial gradient glow */}
-      <div
-        className="pointer-events-none absolute inset-0 flex items-center justify-center"
-        aria-hidden="true"
-      >
-        <div className="h-[600px] w-[600px] rounded-full bg-[radial-gradient(ellipse_at_center,_rgba(120,80,255,0.12)_0%,_rgba(60,130,255,0.08)_40%,_transparent_70%)] blur-3xl" />
-      </div>
-
-      <div className="relative mx-auto max-w-3xl px-6 text-center">
+    <section className="relative overflow-hidden py-20 md:py-28">
+      <div className="relative mx-auto max-w-6xl px-6">
+        <div className="mx-auto max-w-3xl text-center">
+          <motion.div
+            className="mx-auto mb-5 inline-flex items-center gap-2 rounded-full border border-primary/25 bg-primary/10 px-3 py-1 text-sm text-primary"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
+          >
+            <Sparkles className="size-3.5" />
+            AI operational intelligence for event teams
+          </motion.div>
         <motion.h1
           className="text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: "easeOut" }}
         >
-          Turn Event Ideas Into Execution-Ready Operational Workspaces
+          Run Events Like an AI-Powered Command Center
         </motion.h1>
 
         <motion.p
@@ -32,8 +34,9 @@ export function HeroSection() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: "easeOut", delay: 0.15 }}
         >
-          EventOS AI generates complete event plans, timelines, communication
-          kits, and social media strategies from a single prompt.
+          EventOS AI turns raw event details into realistic operations plans,
+          readiness signals, volunteer coverage, communication flows, and
+          creator-grade launch strategy.
         </motion.p>
 
         <motion.div
@@ -48,6 +51,31 @@ export function HeroSection() {
               <ArrowRight className="size-4" />
             </Button>
           </Link>
+        </motion.div>
+        </div>
+
+        <motion.div
+          className="mx-auto mt-14 grid max-w-4xl gap-3 md:grid-cols-3"
+          initial={{ opacity: 0, y: 18 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: "easeOut", delay: 0.45 }}
+        >
+          {([
+            ["Readiness scoring", "Live risk, urgency, and owner signals", Gauge],
+            ["Ops workspace", "Tasks, timeline, volunteers, and scripts", Sparkles],
+            ["Comms engine", "Email, reminders, WhatsApp copy, social plan", Radio],
+          ] as const).map(([title, body, Icon]) => (
+            <div
+              key={title}
+              className="rounded-xl border border-border/60 bg-card/70 p-4 text-left shadow-2xl shadow-black/20 backdrop-blur"
+            >
+              <Icon className="mb-3 size-5 text-primary" />
+              <p className="font-semibold">{title}</p>
+              <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+                {body}
+              </p>
+            </div>
+          ))}
         </motion.div>
       </div>
     </section>

@@ -36,9 +36,11 @@ import {
 } from "@/components/ui/card";
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
 import type { ChecklistItem } from "@/lib/types";
+import type { EventInput } from "@/lib/types";
 
 interface TasksTabProps {
   checklist: ChecklistItem[];
+  eventInput: EventInput;
   onToggle: (id: string) => void;
   onUpdate: (id: string, updates: Partial<ChecklistItem>) => void;
   onAdd: (task: Omit<ChecklistItem, "id">) => void;
@@ -51,24 +53,72 @@ const priorityStyles: Record<string, string> = {
   low: "bg-green-500/10 text-green-400 border-green-500/20",
 };
 
+function formatDate(value?: string) {
+  if (!value) return "";
+  const date = new Date(`${value}T12:00:00`);
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+  });
+}
+
+function deriveDueDate(deadline: string | undefined, eventDate: string) {
+  if (!deadline || !eventDate) return undefined;
+  const event = new Date(`${eventDate}T12:00:00`);
+  if (Number.isNaN(event.getTime())) return undefined;
+
+  const lower = deadline.toLowerCase();
+  let offset = 0;
+  const dayMatch = lower.match(/(\d+)\s*days?\s*before/);
+  const weekMatch = lower.match(/(\d+)\s*weeks?\s*before/);
+  const hourMatch = lower.match(/(\d+)\s*hours?\s*before/);
+
+  if (dayMatch) offset = -Number(dayMatch[1]);
+  else if (weekMatch) offset = -Number(weekMatch[1]) * 7;
+  else if (hourMatch) offset = -1;
+  else if (lower.includes("day before")) offset = -1;
+  else if (lower.includes("event morning")) offset = 0;
+  else if (lower.includes("today") || lower.includes("next")) {
+    const today = new Date();
+    today.setHours(12, 0, 0, 0);
+    return today.toISOString().slice(0, 10);
+  }
+
+  event.setDate(event.getDate() + offset);
+  return event.toISOString().slice(0, 10);
+}
+
+function getTaskDueDate(item: ChecklistItem, eventInput: EventInput) {
+  return item.dueDate ?? deriveDueDate(item.deadline, eventInput.eventDate);
+}
+
 // ── EditRow sub-component ──────────────────────────────────────────────────────
 
 interface EditRowProps {
   item: ChecklistItem;
+  eventInput: EventInput;
   onSave: (id: string, updates: Partial<ChecklistItem>) => void;
   onCancel: () => void;
 }
 
-function EditRow({ item, onSave, onCancel }: EditRowProps) {
+function EditRow({ item, eventInput, onSave, onCancel }: EditRowProps) {
   const [task, setTask] = useState(item.task);
   const [priority, setPriority] = useState<"high" | "medium" | "low">(
     item.priority
   );
   const [deadline, setDeadline] = useState(item.deadline ?? "");
+  const [dueDate, setDueDate] = useState(getTaskDueDate(item, eventInput) ?? "");
   const [owner, setOwner] = useState(item.owner ?? "");
 
   const handleSave = () => {
-    onSave(item.id, { task, priority, deadline: deadline || undefined, owner: owner || undefined });
+    onSave(item.id, {
+      task,
+      priority,
+      deadline: deadline || undefined,
+      dueDate: dueDate || undefined,
+      owner: owner || undefined,
+    });
   };
 
   return (
@@ -105,6 +155,13 @@ function EditRow({ item, onSave, onCancel }: EditRowProps) {
           value={deadline}
           onChange={(e) => setDeadline(e.target.value)}
           className="text-sm h-7 w-40"
+        />
+
+        <Input
+          type="date"
+          value={dueDate}
+          onChange={(e) => setDueDate(e.target.value)}
+          className="text-sm h-7 w-36"
         />
 
         {/* Owner input */}
@@ -157,6 +214,7 @@ function AddTaskForm({ checklist, onAdd, onClose }: AddTaskFormProps) {
   const [category, setCategory] = useState(uniqueCategories[0] ?? "");
   const [priority, setPriority] = useState<"high" | "medium" | "low">("medium");
   const [deadline, setDeadline] = useState("");
+  const [dueDate, setDueDate] = useState("");
   const [owner, setOwner] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -167,6 +225,7 @@ function AddTaskForm({ checklist, onAdd, onClose }: AddTaskFormProps) {
       category,
       priority,
       deadline: deadline || undefined,
+      dueDate: dueDate || undefined,
       owner: owner || undefined,
       completed: false,
     });
@@ -175,6 +234,7 @@ function AddTaskForm({ checklist, onAdd, onClose }: AddTaskFormProps) {
     setCategory(uniqueCategories[0] ?? "");
     setPriority("medium");
     setDeadline("");
+    setDueDate("");
     setOwner("");
     onClose();
   };
@@ -232,6 +292,13 @@ function AddTaskForm({ checklist, onAdd, onClose }: AddTaskFormProps) {
           className="text-sm h-8 w-52"
         />
 
+        <Input
+          type="date"
+          value={dueDate}
+          onChange={(e) => setDueDate(e.target.value)}
+          className="text-sm h-8 w-40"
+        />
+
         {/* Owner */}
         <Input
           type="text"
@@ -258,6 +325,7 @@ function AddTaskForm({ checklist, onAdd, onClose }: AddTaskFormProps) {
 
 interface BoardTaskCardProps {
   item: ChecklistItem;
+  eventInput: EventInput;
   editingId: string | null;
   onToggle: (id: string) => void;
   onUpdate: (id: string, updates: Partial<ChecklistItem>) => void;
@@ -266,6 +334,7 @@ interface BoardTaskCardProps {
 
 function BoardTaskCard({
   item,
+  eventInput,
   editingId,
   onToggle,
   onUpdate,
@@ -276,6 +345,7 @@ function BoardTaskCard({
       {editingId === item.id ? (
         <EditRow
           item={item}
+          eventInput={eventInput}
           onSave={(id, updates) => {
             onUpdate(id, updates);
             setEditingId(null);
@@ -310,10 +380,10 @@ function BoardTaskCard({
           </div>
 
           {/* Deadline */}
-          {item.deadline && (
+          {(getTaskDueDate(item, eventInput) || item.deadline) && (
             <span className="flex items-center gap-1 text-xs text-muted-foreground">
               <Clock3 className="size-3" />
-              {item.deadline}
+              {formatDate(getTaskDueDate(item, eventInput)) || item.deadline}
             </span>
           )}
 
@@ -339,6 +409,7 @@ function BoardTaskCard({
 
 export function TasksTab({
   checklist,
+  eventInput,
   onToggle,
   onUpdate,
   onAdd,
@@ -364,7 +435,7 @@ export function TasksTab({
     return checklist
       .map(
         (item) =>
-          `${item.completed ? "[x]" : "[ ]"} [${item.priority.toUpperCase()}] ${item.task} (${item.category})`
+          `${item.completed ? "[x]" : "[ ]"} [${item.priority.toUpperCase()}] ${item.task} (${item.category})${getTaskDueDate(item, eventInput) ? ` - Due ${getTaskDueDate(item, eventInput)}` : ""}${item.owner ? ` - Owner ${item.owner}` : ""}`
       )
       .join("\n");
   };
@@ -489,6 +560,7 @@ export function TasksTab({
                         {editingId === item.id ? (
                           <EditRow
                             item={item}
+                            eventInput={eventInput}
                             onSave={(id, updates) => {
                               onUpdate(id, updates);
                               setEditingId(null);
@@ -513,10 +585,10 @@ export function TasksTab({
                             </span>
 
                             {/* Deadline */}
-                            {item.deadline && (
+                            {(getTaskDueDate(item, eventInput) || item.deadline) && (
                               <span className="flex items-center gap-1 text-xs text-muted-foreground">
                                 <Clock3 className="size-3" />
-                                {item.deadline}
+                                {formatDate(getTaskDueDate(item, eventInput)) || item.deadline}
                               </span>
                             )}
 
@@ -583,6 +655,7 @@ export function TasksTab({
                         <BoardTaskCard
                           key={item.id}
                           item={item}
+                          eventInput={eventInput}
                           editingId={editingId}
                           onToggle={onToggle}
                           onUpdate={onUpdate}

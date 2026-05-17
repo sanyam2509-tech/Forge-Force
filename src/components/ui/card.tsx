@@ -13,6 +13,7 @@ function Card({
       data-size={size}
       className={cn(
         "group/card flex flex-col gap-4 overflow-hidden rounded-xl bg-card py-4 text-sm text-card-foreground ring-1 ring-foreground/10 has-data-[slot=card-footer]:pb-0 has-[>img:first-child]:pt-0 data-[size=sm]:gap-3 data-[size=sm]:py-3 data-[size=sm]:has-data-[slot=card-footer]:pb-0 *:[img:first-child]:rounded-t-xl *:[img:last-child]:rounded-b-xl",
+        "shadow-[0_18px_80px_-60px_oklch(0.72_0.16_190/0.8)] backdrop-blur supports-[backdrop-filter]:bg-card/88",
         className
       )}
       {...props}

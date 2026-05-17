@@ -64,6 +64,7 @@ See [`.env.example`](.env.example) for all available environment variables.
 | Variable | Required | Description |
 | --- | --- | --- |
 | `GEMINI_API_KEY` | No | Google Gemini API key. When not set, the app uses mock data. |
+| `GEMINI_MODEL` | No | Gemini model name. Defaults to `gemini-2.5-flash`. |
 
 ## Project Structure
 

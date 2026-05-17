@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Users,
   Sparkles,
@@ -32,6 +32,33 @@ import { parseVolunteerCsv } from "@/lib/csv";
 
 function generateId(): string {
   return Date.now().toString(36) + Math.random().toString(36).slice(2);
+}
+
+function volunteersFromInput(value?: string): Volunteer[] {
+  const trimmed = value?.trim();
+  if (!trimmed) return [];
+
+  const asCount = Number(trimmed);
+  if (Number.isInteger(asCount) && asCount > 0) {
+    return Array.from({ length: Math.min(asCount, 40) }, (_, index) => ({
+      id: `input-volunteer-${index + 1}`,
+      name: `Volunteer ${index + 1}`,
+      skills: "",
+      availability: "Flexible",
+    }));
+  }
+
+  return trimmed
+    .split(/[\n,]+/)
+    .map((name) => name.trim())
+    .filter(Boolean)
+    .slice(0, 40)
+    .map((name, index) => ({
+      id: `input-volunteer-${index + 1}-${name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`,
+      name,
+      skills: "",
+      availability: "Flexible",
+    }));
 }
 
 interface VolunteersTabProps {
@@ -71,7 +98,14 @@ const priorityStyles: Record<string, string> = {
 };
 
 export function VolunteersTab({ eventInput }: VolunteersTabProps) {
-  const [volunteers, setVolunteers] = useState<Volunteer[]>([]);
+  const initialVolunteers = useMemo(
+    () => volunteersFromInput(eventInput.volunteerNames),
+    [eventInput.volunteerNames]
+  );
+  const didAutoAssignRef = useRef(false);
+  const [volunteers, setVolunteers] = useState<Volunteer[]>(
+    initialVolunteers
+  );
   const [assignments, setAssignments] = useState<VolunteerAssignment[] | null>(
     null
   );
@@ -148,7 +182,7 @@ export function VolunteersTab({ eventInput }: VolunteersTabProps) {
   }
 
   // ── AI role assignment ──────────────────────────────────────────────────
-  async function handleAssignRoles() {
+  const handleAssignRoles = useCallback(async () => {
     if (isAssigning || volunteers.length === 0) return;
     setIsAssigning(true);
     setAssignError(null);
@@ -172,7 +206,15 @@ export function VolunteersTab({ eventInput }: VolunteersTabProps) {
     } finally {
       setIsAssigning(false);
     }
-  }
+  }, [eventInput, isAssigning, volunteers]);
+
+  useEffect(() => {
+    if (didAutoAssignRef.current || initialVolunteers.length === 0) {
+      return;
+    }
+    didAutoAssignRef.current = true;
+    void handleAssignRoles();
+  }, [handleAssignRoles, initialVolunteers.length]);
 
   // ── Toggle assignment status ────────────────────────────────────────────
   function handleToggleStatus(volunteerId: string) {
@@ -357,6 +399,13 @@ export function VolunteersTab({ eventInput }: VolunteersTabProps) {
           {/* Section 1 — Add manually */}
           <div className="space-y-3">
             <p className="text-sm font-semibold">Add Volunteer</p>
+            {initialVolunteers.length > 0 && assignments === null && (
+              <p className="text-xs text-muted-foreground">
+                Loaded {initialVolunteers.length} volunteer
+                {initialVolunteers.length !== 1 ? "s" : ""} from
+                your event details and assigning roles automatically.
+              </p>
+            )}
             <div className="flex flex-wrap gap-2">
               <Input
                 className="flex-1 min-w-[140px]"

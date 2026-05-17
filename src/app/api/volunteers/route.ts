@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import type { EventInput, Volunteer, VolunteerAssignment } from "@/lib/types";
 import { generateMockVolunteerAssignments } from "@/lib/mock-volunteers";
 
+const GEMINI_MODEL = process.env.GEMINI_MODEL ?? "gemini-2.5-flash";
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();
@@ -21,7 +23,7 @@ export async function POST(request: Request) {
           .map((v) => `ID: ${v.id} | Name: ${v.name} | Skills: ${v.skills || "General"} | Availability: ${v.availability || "Full day"}`)
           .join("\n");
 
-        const prompt = `You are an event operations coordinator. Assign roles for a ${eventInput.eventType} event.
+        const prompt = `You are an event operations coordinator. Assign realistic day-of responsibilities for a ${eventInput.eventType} event.
 
 Event: "${eventInput.title}" | Type: ${eventInput.eventType} | Audience: ${eventInput.audienceType}, ${eventInput.audienceSize} attendees
 
@@ -38,7 +40,9 @@ Role categories for ${eventInput.eventType}:
 Rules:
 - Use the exact volunteer IDs provided
 - Assign exactly one role per volunteer
-- Match skills to roles where possible
+- Match skills to roles where possible, but infer missing skills from event needs
+- Role names must sound like actual event-day responsibilities, not vague departments
+- For larger events, prioritize check-in flow, crowd routing, attendee support, technical support, comms, and runners
 - category must be exactly one of: "Core Operations", "Guest Experience", "Technical", "Media & Content", "Logistics"
 - estimatedEffort like "2-3 hours", "4-5 hours", or "Full day"
 - status must be "assigned"
@@ -47,7 +51,7 @@ Return ONLY a JSON array (no markdown), one object per volunteer:
 [{"volunteerId":"string","volunteerName":"string","role":"string","category":"string","priority":"high|medium|low","estimatedEffort":"string","status":"assigned"}]`;
 
         const response = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+          `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },

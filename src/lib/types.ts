@@ -4,13 +4,72 @@ export interface EventInput {
   audienceType: string;
   audienceSize: string;
   eventDate: string;
+  mainStartDate?: string;
+  mainEndDate?: string;
+  startTime?: string;
+  endTime?: string;
   eventGoal?: string;
   tone?: string;
   additionalNotes?: string;
+  volunteerNames?: string;
+  subEvents?: SubEvent[];
   venue?: string;
   budget?: string;
   goals?: string;
   additionalContext?: string;
+}
+
+export interface SuggestedAsset {
+  id: string;
+  name: string;
+  purpose: string;
+  requiredFields: string[];
+  priority: "High" | "Medium" | "Low";
+  neededBy: string;
+}
+
+export interface PRTask {
+  id: string;
+  title: string;
+  channel: string;
+  priority: "High" | "Medium" | "Low";
+  deadline: string;
+  owner: string;
+  status: "Todo" | "In Progress" | "Done";
+}
+
+export interface EventDocument {
+  id: string;
+  name: string;
+  scope: "Parent" | "Sub-Event";
+  subEventId?: string;
+  purpose: string;
+  content: string;
+  priority: "High" | "Medium" | "Low";
+  ready: boolean;
+}
+
+export interface SubEvent {
+  id: string;
+  name: string;
+  type: string;
+  startDate: string;
+  endDate: string;
+  startTime: string;
+  endTime: string;
+  expectedAudience: string;
+  actualRegistrations?: string;
+  description: string;
+  roundNumber?: string;
+  location: string;
+  coordinatorName?: string;
+  coordinatorContact?: string;
+  requiredVolunteers?: string;
+  volunteerNames?: string;
+  status?: "Planning" | "Registration Open" | "Ready" | "Live" | "Completed" | "At Risk";
+  prTasks?: PRTask[];
+  assets?: SuggestedAsset[];
+  documents?: EventDocument[];
 }
 
 export interface EventBrief {
@@ -27,6 +86,7 @@ export interface ChecklistItem {
   priority: "high" | "medium" | "low";
   completed: boolean;
   deadline?: string;   // e.g. "3 days before event"
+  dueDate?: string;    // ISO date e.g. "2026-06-18"
   owner?: string;      // e.g. "Event Manager"
 }
 
