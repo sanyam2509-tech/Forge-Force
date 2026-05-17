@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Users, Bell } from "lucide-react";
 import { AppHeader } from "@/components/app-header";
 
 import { DashboardHeader } from "@/components/dashboard/dashboard-header";
@@ -15,8 +16,10 @@ import { TasksTab } from "@/components/dashboard/tasks-tab";
 import { TimelineTab } from "@/components/dashboard/timeline-tab";
 import { CommunicationTab } from "@/components/dashboard/communication-tab";
 import { SocialMediaTab } from "@/components/dashboard/social-media-tab";
+import { VolunteersTab } from "@/components/dashboard/volunteers-tab";
+import { RemindersTab } from "@/components/dashboard/reminders-tab";
 
-import type { EventInput, GeneratedWorkspace } from "@/lib/types";
+import type { EventInput, GeneratedWorkspace, ChecklistItem } from "@/lib/types";
 
 function DashboardSkeleton() {
   return (
@@ -133,6 +136,33 @@ function DashboardContent() {
     });
   };
 
+  const handleUpdateTask = (id: string, updates: Partial<ChecklistItem>) => {
+    setWorkspace((prev) =>
+      prev
+        ? {
+            ...prev,
+            checklist: prev.checklist.map((item) =>
+              item.id === id ? { ...item, ...updates } : item
+            ),
+          }
+        : null
+    );
+  };
+
+  const handleAddTask = (task: Omit<ChecklistItem, "id">) => {
+    setWorkspace((prev) =>
+      prev
+        ? {
+            ...prev,
+            checklist: [
+              ...prev.checklist,
+              { id: `custom-${Date.now()}`, ...task },
+            ],
+          }
+        : null
+    );
+  };
+
   return (
     <div className="flex min-h-full flex-1 flex-col">
       <AppHeader>
@@ -185,53 +215,73 @@ function DashboardContent() {
           )}
 
           {/* Success state */}
-          {!loading && !error && workspace && (
-            <Tabs defaultValue="overview">
-              <TabsList className="bg-secondary/50 rounded-lg mb-6 w-full overflow-x-auto sm:w-auto">
-                <TabsTrigger value="overview">Overview</TabsTrigger>
-                <TabsTrigger value="tasks">Tasks</TabsTrigger>
-                <TabsTrigger value="timeline">Timeline</TabsTrigger>
-                <TabsTrigger value="communication">Communication</TabsTrigger>
-                <TabsTrigger value="social-media">Social Media</TabsTrigger>
-              </TabsList>
+          {!loading && !error && workspace && (() => {
+            const eventInput = eventInputRef.current!;
+            return (
+              <Tabs defaultValue="overview">
+                <TabsList className="bg-secondary/50 rounded-lg mb-6 w-full overflow-x-auto sm:w-auto">
+                  <TabsTrigger value="overview">Overview</TabsTrigger>
+                  <TabsTrigger value="tasks">Tasks</TabsTrigger>
+                  <TabsTrigger value="timeline">Timeline</TabsTrigger>
+                  <TabsTrigger value="communication">Communication</TabsTrigger>
+                  <TabsTrigger value="social-media">Social Media</TabsTrigger>
+                  <TabsTrigger value="volunteers" className="flex items-center gap-1.5">
+                    <Users className="size-3.5" /> Volunteers
+                  </TabsTrigger>
+                  <TabsTrigger value="reminders" className="flex items-center gap-1.5">
+                    <Bell className="size-3.5" /> Reminders
+                  </TabsTrigger>
+                </TabsList>
 
-              <TabsContent value="overview">
-                <OverviewTab
-                  brief={workspace.brief}
-                  onRegenerate={handleRegenerateAll}
-                />
-              </TabsContent>
+                <TabsContent value="overview">
+                  <OverviewTab
+                    brief={workspace.brief}
+                    onRegenerate={handleRegenerateAll}
+                  />
+                </TabsContent>
 
-              <TabsContent value="tasks">
-                <TasksTab
-                  checklist={workspace.checklist}
-                  onToggle={handleToggleTask}
-                  onRegenerate={handleRegenerateAll}
-                />
-              </TabsContent>
+                <TabsContent value="tasks">
+                  <TasksTab
+                    checklist={workspace.checklist}
+                    onToggle={handleToggleTask}
+                    onUpdate={handleUpdateTask}
+                    onAdd={handleAddTask}
+                    onRegenerate={handleRegenerateAll}
+                  />
+                </TabsContent>
 
-              <TabsContent value="timeline">
-                <TimelineTab
-                  timeline={workspace.timeline}
-                  onRegenerate={handleRegenerateAll}
-                />
-              </TabsContent>
+                <TabsContent value="timeline">
+                  <TimelineTab
+                    timeline={workspace.timeline}
+                    onRegenerate={handleRegenerateAll}
+                  />
+                </TabsContent>
 
-              <TabsContent value="communication">
-                <CommunicationTab
-                  communication={workspace.communication}
-                  onRegenerate={handleRegenerateAll}
-                />
-              </TabsContent>
+                <TabsContent value="communication">
+                  <CommunicationTab
+                    communication={workspace.communication}
+                    eventInput={eventInput}
+                    onRegenerate={handleRegenerateAll}
+                  />
+                </TabsContent>
 
-              <TabsContent value="social-media">
-                <SocialMediaTab
-                  socialMedia={workspace.socialMedia}
-                  onRegenerate={handleRegenerateAll}
-                />
-              </TabsContent>
-            </Tabs>
-          )}
+                <TabsContent value="social-media">
+                  <SocialMediaTab
+                    socialMedia={workspace.socialMedia}
+                    onRegenerate={handleRegenerateAll}
+                  />
+                </TabsContent>
+
+                <TabsContent value="volunteers">
+                  <VolunteersTab eventInput={eventInput} />
+                </TabsContent>
+
+                <TabsContent value="reminders">
+                  <RemindersTab eventInput={eventInput} communication={workspace.communication} />
+                </TabsContent>
+              </Tabs>
+            );
+          })()}
         </div>
       </main>
     </div>
